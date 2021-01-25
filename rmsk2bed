@@ -1,6 +1,6 @@
 #!/bin/bash
-## UCSC rmsk output open-4.0.3-20130422 ## http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.out.gz
-## Usage (using UCSC rmsk output open-4.0.320130422): curl -s http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.out.gz | zcat | ./rmsk2bed.sh
+## Usage: zcat hg38.fa.out.gz | ./rmsk2bed.sh
+## UCSC rmsk output open-4.0.3-20130422: http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.out.gz
 ## Convert to GTF: awk -vOFS="\t" '{ print $1,"hg38_rmsk","exon",($2+1),$3,$5,$6,".","gene_id \""$10"\"; transcript_id \""$4"\"; family_id \""$11"\"; class_id \""$12"\";" }'
 ## Classes to filter for RNA-seq analysis: (Low_complexity|Simple_repeat|rRNA|scRNA|srpRNA|tRNA)
 

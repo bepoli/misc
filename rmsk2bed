@@ -1,21 +1,36 @@
 #!/bin/bash
 ## Description: bash/awk script to convert RepeatMasker output into bed or gtf
 ## Version: 20210505
-## Usage: zcat hg38.fa.out.gz | ./rmsk2bed [bed,gtf]
+## Usage: zcat hg38.fa.out.gz | ./rmsk2bed [-f bed,gtf] [-t]
+## Passing the flag '-t' removes the following classes: (Low_complexity|Simple_repeat|rRNA|scRNA|srpRNA|tRNA)
 ## Tested with UCSC rmsk output open-4.0.3-20130422: http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.out.gz
-## Classes to filter for RNA-seq analysis: (Low_complexity|Simple_repeat|rRNA|scRNA|srpRNA|tRNA)
 
-outformat=$1 #'bed' or 'gtf'
+# default params
+outformat="bed"
+TEfilter=0
 
-gawk -v OFS="\t" -v outfmt=$outformat 'BEGIN {
+while getopts ":f:t" opt; do
+  case $opt in
+    f)
+      outformat="$OPTARG"
+      ;;
+    t)
+      TEfilter=1
+      ;;
+    \?)
+      echo "Invalid option -$OPTARG" >&2
+      exit 1
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+  esac
+done
 
-  # set "bed" as default format
-  if (outfmt!="bed" && outfmt!="gtf") {
-    outfmt="bed"
-  }
+gawk -v OFS="\t" -v outformat=$outformat -v TEfilter=$TEfilter 'BEGIN {
 
-  # print header
-  if (outfmt=="bed") {
+  # print bed header
+  if (outformat=="bed") {
     print "#chr\tstart\tend\trepName\tSWscore\tstrand\tmilliDiv\tmilliDel\tmilliIns\trepSubfamily\trepFamily\trepClass\trepStart\trepEnd\trepLeft\trepInstance"
   }
 
@@ -54,13 +69,17 @@ gawk -v OFS="\t" -v outfmt=$outformat 'BEGIN {
     family = $11
   }
 
+  if (TEfilter==1 && (class~/^(Low_complexity|Simple_repeat|rRNA|scRNA|srpRNA|tRNA)$/)) {
+    next
+  }
+
   # assign unique ID to individual loci
   sfarr[subfam]+=1
   repname=subfam"_l"sfarr[subfam]
 
-  if (outfmt=="bed") {
+  if (outformat=="bed") {
     print chr,start,end,repname,sw_score,strand,millidiv,millidel,milliins,subfam,family,class,repstart,repend,repleft,instance
-  } else if (outfmt=="gtf") {
+  } else if (outformat=="gtf") {
     print chr,"hg38_rmsk","exon",start+1,end,sw_score,strand,".","gene_id \""subfam"\"; transcript_id \""repname"\"; family_id \""family"\"; class_id \""class"\";"
   }
 

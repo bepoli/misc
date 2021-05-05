@@ -1,12 +1,23 @@
 #!/bin/bash
-## Usage: zcat hg38.fa.out.gz | ./rmsk2bed.sh
-## UCSC rmsk output open-4.0.3-20130422: http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.out.gz
-## Convert to GTF: awk -vOFS="\t" '{ print $1,"hg38_rmsk","exon",($2+1),$3,$5,$6,".","gene_id \""$10"\"; transcript_id \""$4"\"; family_id \""$11"\"; class_id \""$12"\";" }'
+## Description: bash/awk script to convert RepeatMasker output into bed or gtf
+## Version: 20210505
+## Usage: zcat hg38.fa.out.gz | ./rmsk2bed [bed,gtf]
+## Tested with UCSC rmsk output open-4.0.3-20130422: http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.out.gz
 ## Classes to filter for RNA-seq analysis: (Low_complexity|Simple_repeat|rRNA|scRNA|srpRNA|tRNA)
 
-gawk -vOFS="\t" 'BEGIN {
+outformat=$1 #'bed' or 'gtf'
 
-  print "#chr\tstart\tend\trepName\tSWscore\tstrand\tmilliDiv\tmilliDel\tmilliIns\trepSubfamily\trepFamily\trepClass\trepStart\trepEnd\trepLeft\trepInstance"
+gawk -v OFS="\t" -v outfmt=$outformat 'BEGIN {
+
+  # set "bed" as default format
+  if (outfmt!="bed" && outfmt!="gtf") {
+    outfmt="bed"
+  }
+
+  # print header
+  if (outfmt=="bed") {
+    print "#chr\tstart\tend\trepName\tSWscore\tstrand\tmilliDiv\tmilliDel\tmilliIns\trepSubfamily\trepFamily\trepClass\trepStart\trepEnd\trepLeft\trepInstance"
+  }
 
 } NR>3 {
 
@@ -20,15 +31,20 @@ gawk -vOFS="\t" 'BEGIN {
   strand=($9=="+" ? "+" : "-")
   subfam=$10
   repstart=(strand=="+" ? $12 : $14)
-  if (repstart ~/\(/) gsub(/[\(\)]/,"",repstart)
+  if (repstart ~/\(/) {
+    # remove parenthesis from repeat starting coordinate in consensus
+    gsub(/[\(\)]/,"",repstart)
+  }
   repstart-=1
   repend=$13
   repleft=(strand=="+" ? $14 : $12)
   if (repleft ~/\(/) {
+    # remove parenthesis from consensus left bases
     gsub(/[\(\)]/,"",repleft)
   }
   instance=$15
 
+  # get family and class from 11th column
   if ($11~/\//) {
     split($11,fam,"/")
     class = fam[1]
@@ -38,10 +54,15 @@ gawk -vOFS="\t" 'BEGIN {
     family = $11
   }
 
+  # assign unique ID to individual loci
   sfarr[subfam]+=1
   repname=subfam"_l"sfarr[subfam]
 
-  print chr,start,end,repname,sw_score,strand,millidiv,millidel,milliins,subfam,family,class,repstart,repend,repleft,instance
+  if (outfmt=="bed") {
+    print chr,start,end,repname,sw_score,strand,millidiv,millidel,milliins,subfam,family,class,repstart,repend,repleft,instance
+  } else if (outfmt=="gtf") {
+    print chr,"hg38_rmsk","exon",start+1,end,sw_score,strand,".","gene_id \""subfam"\"; transcript_id \""repname"\"; family_id \""family"\"; class_id \""class"\";"
+  }
 
 }'
 

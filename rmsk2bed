@@ -1,16 +1,30 @@
 #!/bin/bash
 ## Description: bash/awk script to convert RepeatMasker output into bed or gtf
-## Version: 20210505
-## Usage: zcat hg38.fa.out.gz | ./rmsk2bed [-f bed,gtf] [-t]
-## Passing the flag '-t' removes the following classes: (Low_complexity|Simple_repeat|rRNA|scRNA|srpRNA|tRNA)
-## Tested with UCSC rmsk output open-4.0.3-20130422: http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.out.gz
+## For details, run:  ./rmsk2bed -h
 
 # default params
 outformat="bed"
 TEfilter=0
 
-while getopts ":f:t" opt; do
+# parse arguments
+while getopts ":f:t:h" opt; do
   case $opt in
+    h)
+      echo 'Usage: zcat hg38.fa.out.gz | ./rmsk2bed [-f bed,gtf] [-th]
+
+  rmsk2bed version: 20210507
+           author: Benedetto Polimeni (polimeni@ingm.org)
+
+  Repeatmasker open-4.0.3-20130422 for hg38 asssembly can be downloaded from here:
+  http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.out.gz
+
+  -h  Display this message and exit.
+  -f  [bed,gtf] Output format. Default: bed.
+  -t  Removes repeats classes that could interfere with RNA-Seq analysis:
+      Low_complexity, Simple_repeat, rRNA, scRNA, srpRNA, tRNA.
+      Default: False.'
+      exit 0
+      ;;  
     f)
       outformat="$OPTARG"
       ;;
@@ -31,7 +45,7 @@ gawk -v OFS="\t" -v outformat=$outformat -v TEfilter=$TEfilter 'BEGIN {
 
   # print bed header
   if (outformat=="bed") {
-    print "#chr\tstart\tend\trepName\tSWscore\tstrand\tmilliDiv\tmilliDel\tmilliIns\trepSubfamily\trepFamily\trepClass\trepStart\trepEnd\trepLeft\trepInstance"
+    print "#chr\tstart\tend\trepName\tSWscore\tstrand\trepSubfamily\trepFamily\trepClass\tmilliDiv\tmilliDel\tmilliIns\trepStart\trepEnd\trepLeft\trepInstance"
   }
 
 } NR>3 {
@@ -78,7 +92,7 @@ gawk -v OFS="\t" -v outformat=$outformat -v TEfilter=$TEfilter 'BEGIN {
   repname=subfam"_l"sfarr[subfam]
 
   if (outformat=="bed") {
-    print chr,start,end,repname,sw_score,strand,millidiv,millidel,milliins,subfam,family,class,repstart,repend,repleft,instance
+    print chr,start,end,repname,sw_score,strand,subfam,family,class,millidiv,millidel,milliins,repstart,repend,repleft,instance
   } else if (outformat=="gtf") {
     print chr,"hg38_rmsk","exon",start+1,end,sw_score,strand,".","gene_id \""subfam"\"; transcript_id \""repname"\"; family_id \""family"\"; class_id \""class"\";"
   }

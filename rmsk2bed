@@ -7,7 +7,7 @@ outformat="bed"
 TEfilter=0
 
 # parse arguments
-while getopts ":f:t:h" opt; do
+while getopts ":f:th" opt; do
   case $opt in
     h)
       echo 'Usage: zcat hg38.fa.out.gz | ./rmsk2bed [-f bed,gtf] [-th]

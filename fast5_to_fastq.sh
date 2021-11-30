@@ -1,12 +1,13 @@
 #!/bin/bash
 # Extract fastq from a multiread fast5 file.
+# Requires GNU parallel and hdf5 command line utility installed,
+# besides the GNU core utilities.
 # For single-read fast5 files consider using an alternative
 #   (e.g. poretools, nanopolish...)
 # Usage:
 #   ./fast5_to_fastq.sh <file.fast5> <cpus> <output_dir>
 # Example:
 #   ./fast5_to_fastq.sh FAQ23372_ea49c7ec_0.fast5 8 fastq_files
-
 
 set -euo pipefail
 

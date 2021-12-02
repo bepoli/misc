@@ -3,7 +3,7 @@
 ## rmsk2bed
 Convert RepeatMasker output to bed or gtf format.
 Examples:
-```
+```bash
 wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.out.gz
 
 # bed format (default)

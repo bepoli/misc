@@ -1,5 +1,12 @@
 # Miscellaneous bioinformatics utilities
 
+## bed12togtf.awk
+Converts a bed12 transcript annotation to gtf format.
+Example:
+```bash
+bed12togtf.awk annotation.bed > annotation.gtf
+```
+
 ## rmsk2bed
 Convert RepeatMasker output to bed or gtf format.
 Examples:

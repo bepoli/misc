@@ -7,7 +7,7 @@ outformat="bed"
 TEfilter=0
 
 # parse arguments
-while getopts ":f:th" opt; do
+while getopts ":f:trh" opt; do
   case $opt in
     h)
       echo 'Usage: zcat hg38.fa.out.gz | ./rmsk2bed [-f bed,gtf] [-th]
@@ -22,7 +22,8 @@ while getopts ":f:th" opt; do
   -f  [bed,gtf] Output format. Default: bed.
   -t  Removes repeats classes that could interfere with RNA-Seq analysis:
       Low_complexity, Simple_repeat, rRNA, scRNA, srpRNA, tRNA.
-      Default: False.'
+      Default: False.
+  -r  Only keep transpons and retrotransposons: DNA, LTR, LINE, SINE. Default: False.'
       exit 0
       ;;  
     f)
@@ -30,6 +31,9 @@ while getopts ":f:th" opt; do
       ;;
     t)
       TEfilter=1
+      ;;
+    r)
+      TEfilter=2
       ;;
     \?)
       echo "Invalid option -$OPTARG" >&2
@@ -84,6 +88,8 @@ gawk -v OFS="\t" -v outformat=$outformat -v TEfilter=$TEfilter 'BEGIN {
   }
 
   if (TEfilter==1 && (class~/^(Low_complexity|Simple_repeat|rRNA|scRNA|srpRNA|tRNA)$/)) {
+    next
+  } else if (TEfilter==2 && !(class~/^(DNA|LTR|LINE|SINE)$/)) {
     next
   }
 
